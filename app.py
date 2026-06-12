@@ -77,15 +77,32 @@ with tab1:
     # ÚLTIMA ACTUALIZACIÓN
     # ======================================
 
-    ultimo_ts = df_b["Timestamp"].max()
+    ultimo_buy_ts = (
+    df_b[df_b["Tipo"] == "BUY"]["Timestamp"]
+    .max()
+    )
 
-    df_ult = df_b[
-        df_b["Timestamp"] == ultimo_ts
+    ultimo_sell_ts = (
+    df_b[df_b["Tipo"] == "SELL"]["Timestamp"]
+    .max()
+    )
+
+    buy = df_b[
+    (df_b["Tipo"] == "BUY")
+    &
+    (df_b["Timestamp"] == ultimo_buy_ts)
     ]
 
-    buy = df_ult[df_ult["Tipo"] == "BUY"]
-    sell = df_ult[df_ult["Tipo"] == "SELL"]
+    sell = df_b[
+    (df_b["Tipo"] == "SELL")
+    &
+    (df_b["Timestamp"] == ultimo_sell_ts)
+    ]
 
+    ultimo_ts = max(
+    ultimo_buy_ts,
+    ultimo_sell_ts
+    )
     # ======================================
     # KPIS
     # ======================================
