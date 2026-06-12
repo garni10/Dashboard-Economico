@@ -49,100 +49,243 @@ tab1, tab2 = st.tabs([
 
 with tab1:
 
-    st.header("Mercado Binance P2P USDT/BOB")
+    st.header("💵 Mercado Binance P2P USDT/BOB")
 
-    tipo = st.selectbox(
-        "Tipo de operación",
-        sorted(df_binance["Tipo"].unique())
+    # ======================================
+    # FILTRO DE FECHAS
+    # ======================================
+
+    fecha_min = df_binance["Timestamp"].min().date()
+    fecha_max = df_binance["Timestamp"].max().date()
+
+    rango = st.slider(
+        "Periodo",
+        min_value=fecha_min,
+        max_value=fecha_max,
+        value=(fecha_min, fecha_max)
     )
 
-    df_b = df_binance[df_binance["Tipo"] == tipo]
+    inicio, fin = rango
+
+    df_b = df_binance[
+        (df_binance["Timestamp"].dt.date >= inicio)
+        &
+        (df_binance["Timestamp"].dt.date <= fin)
+    ]
+
+    # ======================================
+    # ÚLTIMA ACTUALIZACIÓN
+    # ======================================
+
+    ultimo_ts = df_b["Timestamp"].max()
+
+    df_ult = df_b[
+        df_b["Timestamp"] == ultimo_ts
+    ]
+
+    buy = df_ult[df_ult["Tipo"] == "BUY"]
+    sell = df_ult[df_ult["Tipo"] == "SELL"]
+
+    # ======================================
+    # KPIS
+    # ======================================
 
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
-        "Precio Promedio",
-        f"{df_b['Precio'].mean():.2f}"
+        "Precio Máximo BUY",
+        f"{buy['Precio'].max():.2f}"
     )
 
     col2.metric(
-        "Precio Mínimo",
-        f"{df_b['Precio'].min():.2f}"
+        "Precio Mínimo BUY",
+        f"{buy['Precio'].min():.2f}"
     )
 
     col3.metric(
-        "Precio Máximo",
-        f"{df_b['Precio'].max():.2f}"
+        "Disponible BUY",
+        f"{buy['Disponible'].sum():,.0f}"
     )
 
     col4.metric(
-        "Oferta Total",
-        f"{df_b['Disponible'].sum():,.0f}"
+        "Disponible SELL",
+        f"{sell['Disponible'].sum():,.0f}"
+    )
+
+    col5, col6, col7 = st.columns(3)
+
+    col5.metric(
+        "Vendedores BUY",
+        buy["Vendedor"].nunique()
+    )
+
+    col6.metric(
+        "Vendedores SELL",
+        sell["Vendedor"].nunique()
+    )
+
+    col7.metric(
+        "Actualizado",
+        ultimo_ts.strftime("%d/%m %H:%M")
     )
 
     st.markdown("---")
 
+    # ======================================
+    # PRECIO PROMEDIO BUY VS SELL
+    # ======================================
+
     precio_diario = (
         df_b
-        .groupby(df_b["Timestamp"].dt.date)
-        ["Precio"]
+        .groupby(
+            [
+                df_b["Timestamp"].dt.date,
+                "Tipo"
+            ]
+        )["Precio"]
         .mean()
         .reset_index()
     )
 
-    fig = px.line(
-        precio_diario,
-        x="Timestamp",
-        y="Precio",
-        markers=True,
-        title="Precio promedio diario"
+    precio_diario.rename(
+        columns={"Timestamp": "Fecha"},
+        inplace=True
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    fig = px.line(
+        precio_diario,
+        x="Fecha",
+        y="Precio",
+        color="Tipo",
+        markers=True,
+        title="Precio Promedio USDT/BOB"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # ======================================
+    # DISPONIBILIDAD BUY VS SELL
+    # ======================================
+
+    disponibilidad = (
+        df_b
+        .groupby(
+            [
+                df_b["Timestamp"].dt.date,
+                "Tipo"
+            ]
+        )["Disponible"]
+        .sum()
+        .reset_index()
+    )
+
+    disponibilidad.rename(
+        columns={"Timestamp": "Fecha"},
+        inplace=True
+    )
+
+    fig = px.line(
+        disponibilidad,
+        x="Fecha",
+        y="Disponible",
+        color="Tipo",
+        markers=True,
+        title="Disponibilidad USDT"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # ======================================
+    # HISTOGRAMAS
+    # ======================================
 
     col1, col2 = st.columns(2)
 
     with col1:
 
         fig = px.histogram(
-            df_b,
+            df_b[df_b["Tipo"]=="BUY"],
             x="Precio",
             nbins=30,
-            title="Distribución de precios"
+            title="Distribución BUY"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
 
     with col2:
 
-        vendedores = (
-            df_b.groupby("Vendedor")
-            ["Disponible"]
+        fig = px.histogram(
+            df_b[df_b["Tipo"]=="SELL"],
+            x="Precio",
+            nbins=30,
+            title="Distribución SELL"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    # ======================================
+    # TOP VENDEDORES
+    # ======================================
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        top_buy = (
+            df_b[df_b["Tipo"]=="BUY"]
+            .groupby("Vendedor")["Disponible"]
             .sum()
             .sort_values(ascending=False)
-            .head(15)
+            .head(10)
             .reset_index()
         )
 
         fig = px.bar(
-            vendedores,
+            top_buy,
             x="Vendedor",
             y="Disponible",
-            title="Top vendedores por oferta"
+            title="Top Disponibilidad BUY"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
 
-    st.subheader("Detalle")
+    with col2:
 
-    st.dataframe(
-        df_b.sort_values(
-            "Timestamp",
-            ascending=False
-        ),
-        use_container_width=True
-    )
+        top_sell = (
+            df_b[df_b["Tipo"]=="SELL"]
+            .groupby("Vendedor")["Disponible"]
+            .sum()
+            .sort_values(ascending=False)
+            .head(10)
+            .reset_index()
+        )
 
+        fig = px.bar(
+            top_sell,
+            x="Vendedor",
+            y="Disponible",
+            title="Top Disponibilidad SELL"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
 # ====================================================
 # HIPERMAXI
 # ====================================================
