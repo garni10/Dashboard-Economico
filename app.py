@@ -318,21 +318,30 @@ with tab2:
     fecha_min = df_hiper["Fecha"].min().date()
     fecha_max = df_hiper["Fecha"].max().date()
 
-    rango = st.slider(
-        "Periodo",
-        min_value=fecha_min,
-        max_value=fecha_max,
-        value=(fecha_min, fecha_max),
-        key="hiper_fecha"
-    )
+    if fecha_min == fecha_max:
 
-    inicio, fin = rango
+        inicio = fecha_min
+        fin = fecha_max
+
+        st.info(
+            f"Solo existe información para la fecha {fecha_max}"
+        )
+
+    else:
+
+        inicio, fin = st.slider(
+            "Periodo",
+            min_value=fecha_min,
+            max_value=fecha_max,
+            value=(fecha_min, fecha_max),
+            key="hiper_fecha"
+        )
 
     df_h = df_hiper[
         (df_hiper["Fecha"].dt.date >= inicio)
         &
         (df_hiper["Fecha"].dt.date <= fin)
-    ]
+    ].copy()
 
     # ======================================
     # FILTRO SUCURSAL
@@ -348,6 +357,7 @@ with tab2:
     )
 
     if sucursal != "Todas":
+
         df_h = df_h[
             df_h["Sucursal"] == sucursal
         ]
@@ -366,34 +376,65 @@ with tab2:
     )
 
     if categoria != "Todas":
+
         df_h = df_h[
             df_h["Categoría"] == categoria
         ]
 
     # ======================================
-    # KPIs
+    # VARIACIÓN ABSOLUTA
+    # ======================================
+
+    df_h = df_h.sort_values(
+        ["Sucursal", "Producto", "Fecha"]
+    )
+
+    df_h["Variacion_Abs"] = (
+        df_h.groupby(
+            ["Sucursal", "Producto"]
+        )["Precio"]
+        .diff()
+    )
+
+    # ======================================
+    # ÚLTIMA FECHA
     # ======================================
 
     ultima_fecha = df_h["Fecha"].max()
 
     df_ult = df_h[
         df_h["Fecha"] == ultima_fecha
-    ]
+    ].copy()
+
+    # ======================================
+    # KPIs
+    # ======================================
 
     variacion_total = (
-        df_ult["Precio"]
-        * df_ult["Variación diaria precio"]
-    ).sum()
+        df_ult["Variacion_Abs"]
+        .fillna(0)
+        .sum()
+    )
 
     variacion_promedio = (
         df_ult["Variación diaria precio"]
         .mean() * 100
     )
 
-    pct_suben = (
-        (df_ult["Variación diaria precio"] > 0)
-        .mean() * 100
+    productos_suben = (
+        df_ult["Variacion_Abs"] > 0
+    ).sum()
+
+    productos_total = (
+        df_ult["Producto"]
+        .nunique()
     )
+
+    pct_suben = (
+        productos_suben
+        / productos_total
+        * 100
+    ) if productos_total > 0 else 0
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -444,59 +485,69 @@ with tab2:
     )
 
     # ======================================
-    # TOP SUBIDAS Y BAJADAS
+    # TOP 10 SUBIDAS Y BAJADAS
     # ======================================
+
+    top_subidas = (
+        df_ult
+        .sort_values(
+            "Variacion_Abs",
+            ascending=False
+        )
+        .head(10)
+    )
+
+    top_bajadas = (
+        df_ult
+        .sort_values(
+            "Variacion_Abs",
+            ascending=True
+        )
+        .head(10)
+    )
 
     col1, col2 = st.columns(2)
 
     with col1:
 
-        top_subidas = (
-            df_h
-            .sort_values(
-                "Variación diaria precio",
-                ascending=False
-            )
-            .head(15)
+        st.subheader(
+            "🔴 Top 10 Productos con Variación Negativa"
         )
 
-        fig = px.bar(
-            top_subidas,
-            x="Producto",
-            y="Variación diaria precio",
-            title="Mayores Incrementos"
-        )
-
-        st.plotly_chart(
-            fig,
-            use_container_width=True
+        st.dataframe(
+            top_bajadas[
+                [
+                    "Producto",
+                    "Precio",
+                    "Variacion_Abs"
+                ]
+            ],
+            use_container_width=True,
+            hide_index=True
         )
 
     with col2:
 
-        top_bajadas = (
-            df_h
-            .sort_values(
-                "Variación diaria precio",
-                ascending=True
-            )
-            .head(15)
+        st.subheader(
+            "🟢 Top 10 Productos con Variación Positiva"
         )
 
-        fig = px.bar(
-            top_bajadas,
-            x="Producto",
-            y="Variación diaria precio",
-            title="Mayores Reducciones"
+        st.dataframe(
+            top_subidas[
+                [
+                    "Producto",
+                    "Precio",
+                    "Variacion_Abs"
+                ]
+            ],
+            use_container_width=True,
+            hide_index=True
         )
 
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
+    st.markdown("---")
 
     # ======================================
-    # PARTICIPACIÓN POR CATEGORÍA
+    # TORTA POR CATEGORÍA
     # ======================================
 
     categorias_df = (
@@ -515,19 +566,5 @@ with tab2:
 
     st.plotly_chart(
         fig,
-        use_container_width=True
-    )
-
-    # ======================================
-    # DETALLE
-    # ======================================
-
-    st.subheader("Detalle de Productos")
-
-    st.dataframe(
-        df_h.sort_values(
-            "Fecha",
-            ascending=False
-        ),
         use_container_width=True
     )
