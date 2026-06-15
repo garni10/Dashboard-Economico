@@ -681,3 +681,36 @@ with tab2:
         fig,
         use_container_width=True
     )
+
+    # ======================================
+    # Heatmap
+    # ======================================
+
+    heat = (
+        df_h
+        .groupby(
+            [
+                "Categoría",
+                "Fecha"
+            ]
+        )["Variación diaria precio"]
+        .mean()
+        .reset_index()
+     )
+    heatmap = heat.pivot(
+        index="Categoría",
+        columns="Fecha",
+        values="Variación diaria precio"
+    )
+    import plotly.express as px
+    
+    fig = px.imshow(
+        heatmap,
+        aspect="auto",
+        title="Heatmap Variación por Categoría"
+    )
+    
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
