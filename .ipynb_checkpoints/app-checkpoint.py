@@ -488,63 +488,93 @@ with tab2:
     # TOP 10 SUBIDAS Y BAJADAS
     # ======================================
 
-    top_subidas = (
-        df_ult
-        .sort_values(
-            "Variacion_Abs",
-            ascending=False
+    if len(df_h["Fecha"].unique()) > 1:
+
+        fechas_ordenadas = sorted(df_h["Fecha"].unique())
+    
+        fecha_actual = fechas_ordenadas[-1]
+        fecha_anterior = fechas_ordenadas[-2]
+    
+        actual = (
+            df_h[df_h["Fecha"] == fecha_actual]
+            [["Producto", "Precio"]]
+            .rename(columns={"Precio": "Precio_Actual"})
         )
-        .head(10)
-    )
-
-    top_bajadas = (
-        df_ult
-        .sort_values(
-            "Variacion_Abs",
-            ascending=True
+    
+        anterior = (
+            df_h[df_h["Fecha"] == fecha_anterior]
+            [["Producto", "Precio"]]
+            .rename(columns={"Precio": "Precio_Anterior"})
         )
-        .head(10)
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.subheader(
-            "🔴 Top 10 Productos con Variación Negativa"
+    
+        variaciones = actual.merge(
+            anterior,
+            on="Producto",
+            how="inner"
         )
-
-        st.dataframe(
-            top_bajadas[
-                [
-                    "Producto",
-                    "Precio",
-                    "Variacion_Abs"
-                ]
-            ],
-            use_container_width=True,
-            hide_index=True
+    
+        variaciones["Variacion_Abs"] = (
+            variaciones["Precio_Actual"]
+            - variaciones["Precio_Anterior"]
         )
-
-    with col2:
-
-        st.subheader(
-            "🟢 Top 10 Productos con Variación Positiva"
+    
+        top_subidas = (
+            variaciones
+            .sort_values(
+                "Variacion_Abs",
+                ascending=False
+            )
+            .head(10)
         )
-
-        st.dataframe(
-            top_subidas[
-                [
-                    "Producto",
-                    "Precio",
-                    "Variacion_Abs"
-                ]
-            ],
-            use_container_width=True,
-            hide_index=True
+    
+        top_bajadas = (
+            variaciones
+            .sort_values(
+                "Variacion_Abs",
+                ascending=True
+            )
+            .head(10)
         )
-
-    st.markdown("---")
+    
+        col1, col2 = st.columns(2)
+    
+        with col1:
+    
+            st.subheader(
+                "🔺 Top 10 Productos con Variación Positiva"
+            )
+    
+            st.dataframe(
+                top_subidas[
+                    [
+                        "Producto",
+                        "Precio_Anterior",
+                        "Precio_Actual",
+                        "Variacion_Abs"
+                    ]
+                ],
+                use_container_width=True,
+                hide_index=True
+            )
+    
+        with col2:
+    
+            st.subheader(
+                "🔻 Top 10 Productos con Variación Negativa"
+            )
+    
+            st.dataframe(
+                top_bajadas[
+                    [
+                        "Producto",
+                        "Precio_Anterior",
+                        "Precio_Actual",
+                        "Variacion_Abs"
+                    ]
+                ],
+                use_container_width=True,
+                hide_index=True
+            )
 
     # ======================================
     # TORTA POR CATEGORÍA
