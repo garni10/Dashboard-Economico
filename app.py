@@ -309,21 +309,34 @@ with tab1:
 
 with tab2:
 
-    st.header("Monitoreo de Precios Hipermaxi")
+    st.header("🛒 Monitoreo de Precios Hipermaxi")
 
-    ciudades = sorted(
-        df_hiper["Ciudad"].dropna().unique()
+    # ======================================
+    # FILTRO DE FECHAS
+    # ======================================
+
+    fecha_min = df_hiper["Fecha"].min().date()
+    fecha_max = df_hiper["Fecha"].max().date()
+
+    rango = st.slider(
+        "Periodo",
+        min_value=fecha_min,
+        max_value=fecha_max,
+        value=(fecha_min, fecha_max),
+        key="hiper_fecha"
     )
 
-    ciudad = st.selectbox(
-        "Ciudad",
-        ["Todas"] + ciudades
-    )
+    inicio, fin = rango
 
-    df_h = df_hiper.copy()
+    df_h = df_hiper[
+        (df_hiper["Fecha"].dt.date >= inicio)
+        &
+        (df_hiper["Fecha"].dt.date <= fin)
+    ]
 
-    if ciudad != "Todas":
-        df_h = df_h[df_h["Ciudad"] == ciudad]
+    # ======================================
+    # FILTRO SUCURSAL
+    # ======================================
 
     sucursales = sorted(
         df_h["Sucursal"].dropna().unique()
@@ -331,11 +344,17 @@ with tab2:
 
     sucursal = st.selectbox(
         "Sucursal",
-        ["Todas"] + sucursales
+        ["Todas"] + list(sucursales)
     )
 
     if sucursal != "Todas":
-        df_h = df_h[df_h["Sucursal"] == sucursal]
+        df_h = df_h[
+            df_h["Sucursal"] == sucursal
+        ]
+
+    # ======================================
+    # FILTRO CATEGORÍA
+    # ======================================
 
     categorias = sorted(
         df_h["Categoría"].dropna().unique()
@@ -343,39 +362,70 @@ with tab2:
 
     categoria = st.selectbox(
         "Categoría",
-        ["Todas"] + categorias
+        ["Todas"] + list(categorias)
     )
 
     if categoria != "Todas":
-        df_h = df_h[df_h["Categoría"] == categoria]
+        df_h = df_h[
+            df_h["Categoría"] == categoria
+        ]
+
+    # ======================================
+    # KPIs
+    # ======================================
+
+    ultima_fecha = df_h["Fecha"].max()
+
+    df_ult = df_h[
+        df_h["Fecha"] == ultima_fecha
+    ]
+
+    variacion_total = (
+        df_ult["Precio"]
+        * df_ult["Variación diaria precio"]
+    ).sum()
+
+    variacion_promedio = (
+        df_ult["Variación diaria precio"]
+        .mean() * 100
+    )
+
+    pct_suben = (
+        (df_ult["Variación diaria precio"] > 0)
+        .mean() * 100
+    )
 
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
-        "Productos",
-        len(df_h["Producto"].unique())
+        "Variación Total Precio",
+        f"Bs {variacion_total:,.2f}"
     )
 
     col2.metric(
-        "Precio Promedio",
-        round(df_h["Precio"].mean(), 2)
+        "Variación Promedio %",
+        f"{variacion_promedio:.2f}%"
     )
 
     col3.metric(
-        "Stock Promedio",
-        round(df_h["Stock"].mean(), 2)
+        "% Productos que Suben",
+        f"{pct_suben:.2f}%"
     )
 
     col4.metric(
-        "Variación Promedio",
-        f"{100*df_h['Variación diaria precio'].mean():.2f}%"
+        "Última Actualización",
+        ultima_fecha.strftime("%d/%m/%Y")
     )
 
     st.markdown("---")
 
+    # ======================================
+    # EVOLUCIÓN PRECIO PROMEDIO
+    # ======================================
+
     precios = (
-        df_h.groupby("Fecha")
-        ["Precio"]
+        df_h
+        .groupby("Fecha")["Precio"]
         .mean()
         .reset_index()
     )
@@ -385,17 +435,25 @@ with tab2:
         x="Fecha",
         y="Precio",
         markers=True,
-        title="Precio promedio"
+        title="Precio Promedio"
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # ======================================
+    # TOP SUBIDAS Y BAJADAS
+    # ======================================
 
     col1, col2 = st.columns(2)
 
     with col1:
 
         top_subidas = (
-            df_h.sort_values(
+            df_h
+            .sort_values(
                 "Variación diaria precio",
                 ascending=False
             )
@@ -406,15 +464,19 @@ with tab2:
             top_subidas,
             x="Producto",
             y="Variación diaria precio",
-            title="Mayores incrementos"
+            title="Mayores Incrementos"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
 
     with col2:
 
         top_bajadas = (
-            df_h.sort_values(
+            df_h
+            .sort_values(
                 "Variación diaria precio",
                 ascending=True
             )
@@ -425,14 +487,21 @@ with tab2:
             top_bajadas,
             x="Producto",
             y="Variación diaria precio",
-            title="Mayores reducciones"
+            title="Mayores Reducciones"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    # ======================================
+    # PARTICIPACIÓN POR CATEGORÍA
+    # ======================================
 
     categorias_df = (
-        df_h.groupby("Categoría")
-        ["Producto"]
+        df_h
+        .groupby("Categoría")["Producto"]
         .count()
         .reset_index()
     )
@@ -441,12 +510,19 @@ with tab2:
         categorias_df,
         names="Categoría",
         values="Producto",
-        title="Participación por categoría"
+        title="Participación por Categoría"
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
 
-    st.subheader("Detalle de productos")
+    # ======================================
+    # DETALLE
+    # ======================================
+
+    st.subheader("Detalle de Productos")
 
     st.dataframe(
         df_h.sort_values(
