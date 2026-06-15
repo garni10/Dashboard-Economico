@@ -577,6 +577,89 @@ with tab2:
             )
 
     # ======================================
+    # ANÁLISIS DE PRODUCTO
+    # ======================================
+    
+    st.markdown("---")
+    
+    st.subheader("🔍 Evolución Histórica de Producto")
+    
+    productos = sorted(
+        df_h["Producto"].dropna().unique()
+    )
+    
+    producto_sel = st.selectbox(
+        "Seleccione un producto",
+        productos
+    )
+    
+    df_prod = (
+        df_h[
+            df_h["Producto"] == producto_sel
+        ]
+        .sort_values("Fecha")
+    )
+    
+    if not df_prod.empty:
+    
+        precio_actual = (
+            df_prod["Precio"].iloc[-1]
+        )
+    
+        precio_inicial = (
+            df_prod["Precio"].iloc[0]
+        )
+    
+        precio_min = (
+            df_prod["Precio"].min()
+        )
+    
+        precio_max = (
+            df_prod["Precio"].max()
+        )
+    
+        variacion_acum = (
+            (precio_actual / precio_inicial - 1)
+            * 100
+        )
+    
+        c1, c2, c3, c4 = st.columns(4)
+    
+        c1.metric(
+            "Precio Actual",
+            f"Bs {precio_actual:,.2f}"
+        )
+    
+        c2.metric(
+            "Precio Mínimo",
+            f"Bs {precio_min:,.2f}"
+        )
+    
+        c3.metric(
+            "Precio Máximo",
+            f"Bs {precio_max:,.2f}"
+        )
+    
+        c4.metric(
+            "Variación Acumulada",
+            f"{variacion_acum:.2f}%"
+        )
+    
+        fig = px.line(
+            df_prod,
+            x="Fecha",
+            y="Precio",
+            markers=True,
+            title=f"Evolución de {producto_sel}"
+        )
+    
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+    
+
+    # ======================================
     # TORTA POR CATEGORÍA
     # ======================================
 
