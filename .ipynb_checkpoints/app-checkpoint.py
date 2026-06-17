@@ -107,7 +107,7 @@ with tab1:
     # KPIS
     # ======================================
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4 col5 = st.columns(5)
 
     col1.metric(
         "Precio Máximo BUY",
@@ -115,39 +115,79 @@ with tab1:
     )
 
     col2.metric(
+        "Precio Mínimo BUY",
+        f"{buy['Precio'].min():.2f}"
+    )
+    
+    col3.metric(
         "Precio Promedio BUY",
         f"{buy['Precio'].mean():.2f}"
     )
 
-    col3.metric(
+    col4.metric(
         "Disponible BUY",
         f"{buy['Disponible'].sum():,.0f}"
     )
 
-    col4.metric(
+    col5.metric(
         "Disponible SELL",
         f"{sell['Disponible'].sum():,.0f}"
     )
 
-    col5, col6, col7 = st.columns(3)
+    col6, col7, col8 = st.columns(3)
 
-    col5.metric(
+    col6.metric(
         "Vendedores BUY",
         buy["Vendedor"].nunique()
     )
 
-    col6.metric(
+    col7.metric(
         "Vendedores SELL",
         sell["Vendedor"].nunique()
     )
 
-    col7.metric(
+    col8.metric(
         "Actualizado",
         ultimo_ts.strftime("%d/%m %H:%M")
     )
 
     st.markdown("---")
 
+    # ======================================
+    # PRECIO PROMEDIO BUY VS SELL
+    # ======================================
+
+    precio_diario = (
+        df_b
+        .groupby(
+            [
+                df_b["Timestamp"].dt.date,
+                "Tipo"
+            ]
+        )["Precio"]
+        .mean()
+        .reset_index()
+    )
+
+    precio_diario.rename(
+        columns={"Timestamp": "Fecha"},
+        inplace=True
+    )
+
+    fig = px.line(
+        precio_diario,
+        x="Fecha",
+        y="Precio",
+        color="Tipo",
+        markers=True,
+        title="Precio Promedio USDT/BOB"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+    
     # ======================================
     # EVOLUCIÓN DEL MEJOR PRECIO BUY (BID)
     # VS MEJOR PRECIO SELL (ASK)
