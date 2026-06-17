@@ -200,13 +200,8 @@ with tab1:
         y="Precio",
         color="Tipo",
         markers=True,
-        title="Mejor Precio BUY (Bid) vs SELL (Ask)",
-        color_discrete_map={
-            "BUY": COLOR_BUY,
-            "SELL": COLOR_SELL
-        }
-    )
-    
+        title="Mejor Precio BUY (Bid) vs SELL (Ask)"
+    )    
     fig.update_traces(
         line=dict(width=3),
         marker=dict(size=6)
