@@ -8,6 +8,24 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+
+button[data-baseweb="tab"]{
+    font-size:24px;
+    font-weight:700;
+    padding-top:15px;
+    padding-bottom:15px;
+    justify-content:center;
+}
+
+button[data-baseweb="tab"][aria-selected="true"]{
+    color:#00BFFF;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # ==========================================
 # CARGA DE DATOS
 # ==========================================
