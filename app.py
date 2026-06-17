@@ -219,90 +219,246 @@ with tab1:
     )
 
     # ======================================
-    # HISTOGRAMAS
+    # HISTOGRAMAS (ÚLTIMO SNAPSHOT)
     # ======================================
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
+    
+    col_sell, col_buy = st.columns(2)
+    
+    xmin = min(
+        buy["Precio"].min(),
+        sell["Precio"].min()
+    )
+    
+    xmax = max(
+        buy["Precio"].max(),
+        sell["Precio"].max()
+    )
+    
+    bin_size = 0.10
+    
+    with col_sell:
+    
         fig = px.histogram(
-            df_b[df_b["Tipo"]=="BUY"],
+            sell,
             x="Precio",
-            nbins=30,
-            title="Distribución BUY"
+            title="Distribución SELL",
+            nbins=int((xmax - xmin) / bin_size)
         )
-
+    
+        fig.update_traces(
+            xbins=dict(
+                start=xmin,
+                end=xmax,
+                size=bin_size
+            )
+        )
+    
+        fig.update_layout(
+            bargap=0.03,
+            xaxis_title="Precio",
+            yaxis_title="Cantidad de vendedores"
+        )
+    
         st.plotly_chart(
             fig,
             use_container_width=True
         )
-
-    with col2:
-
+    
+    
+    with col_buy:
+    
         fig = px.histogram(
-            df_b[df_b["Tipo"]=="SELL"],
+            buy,
             x="Precio",
-            nbins=30,
-            title="Distribución SELL"
+            title="Distribución BUY",
+            nbins=int((xmax - xmin) / bin_size)
         )
-
+    
+        fig.update_traces(
+            xbins=dict(
+                start=xmin,
+                end=xmax,
+                size=bin_size
+            )
+        )
+    
+        fig.update_layout(
+            bargap=0.03,
+            xaxis_title="Precio",
+            yaxis_title="Cantidad de vendedores"
+        )
+    
         st.plotly_chart(
             fig,
             use_container_width=True
         )
 
     # ======================================
-    # TOP VENDEDORES
+    # TOP 10 VENDEDORES (ÚLTIMO SNAPSHOT)
     # ======================================
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        top_buy = (
-            df_b[df_b["Tipo"]=="BUY"]
-            .groupby("Vendedor")["Disponible"]
-            .sum()
-            .sort_values(ascending=False)
-            .head(10)
-            .reset_index()
-        )
-
-        fig = px.bar(
-            top_buy,
-            x="Vendedor",
-            y="Disponible",
-            title="Top Disponibilidad BUY"
-        )
-
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
-
-    with col2:
-
+    
+    col_sell, col_buy = st.columns(2)
+    
+    # ==================================================
+    # SELL
+    # ==================================================
+    
+    with col_sell:
+    
         top_sell = (
-            df_b[df_b["Tipo"]=="SELL"]
-            .groupby("Vendedor")["Disponible"]
-            .sum()
-            .sort_values(ascending=False)
+            sell
+            .groupby("Vendedor", as_index=False)
+            .agg(
+                Disponible=("Disponible", "sum"),
+                Precio=("Precio", "mean")
+            )
+            .sort_values(
+                by="Disponible",
+                ascending=False
+            )
             .head(10)
-            .reset_index()
         )
-
+    
         fig = px.bar(
+    
             top_sell,
-            x="Vendedor",
-            y="Disponible",
-            title="Top Disponibilidad SELL"
+    
+            y="Vendedor",
+    
+            x="Disponible",
+    
+            orientation="h",
+    
+            text="Disponible",
+    
+            hover_data={
+                "Precio":":.2f",
+                "Disponible":":,.0f"
+            },
+    
+            title="Top 10 Liquidez SELL"
         )
-
+    
+        fig.update_traces(
+    
+            texttemplate="%{text:,.0f}",
+    
+            textposition="outside",
+    
+            customdata=top_sell[["Precio"]],
+    
+            hovertemplate=
+            "<b>%{y}</b><br>"
+            "Disponible: %{x:,.0f} USDT<br>"
+            "Precio: %{customdata[0]:.2f} Bs/USDT"
+            "<extra></extra>"
+        )
+    
+        fig.update_layout(
+    
+            xaxis_title="USDT Disponibles",
+    
+            yaxis_title="",
+    
+            yaxis=dict(
+                autorange="reversed"
+            ),
+    
+            height=500,
+    
+            margin=dict(
+                l=10,
+                r=10,
+                t=50,
+                b=20
+            )
+        )
+    
         st.plotly_chart(
             fig,
             use_container_width=True
         )
+    
+    # ==================================================
+    # BUY
+    # ==================================================
+    
+    with col_buy:
+    
+        top_buy = (
+            buy
+            .groupby("Vendedor", as_index=False)
+            .agg(
+                Disponible=("Disponible", "sum"),
+                Precio=("Precio", "mean")
+            )
+            .sort_values(
+                by="Disponible",
+                ascending=False
+            )
+            .head(10)
+        )
+    
+        fig = px.bar(
+    
+            top_buy,
+    
+            y="Vendedor",
+    
+            x="Disponible",
+    
+            orientation="h",
+    
+            text="Disponible",
+    
+            hover_data={
+                "Precio":":.2f",
+                "Disponible":":,.0f"
+            },
+    
+            title="Top 10 Liquidez BUY"
+        )
+    
+        fig.update_traces(
+    
+            texttemplate="%{text:,.0f}",
+    
+            textposition="outside",
+    
+            customdata=top_buy[["Precio"]],
+    
+            hovertemplate=
+            "<b>%{y}</b><br>"
+            "Disponible: %{x:,.0f} USDT<br>"
+            "Precio: %{customdata[0]:.2f} Bs/USDT"
+            "<extra></extra>"
+        )
+    
+        fig.update_layout(
+    
+            xaxis_title="USDT Disponibles",
+    
+            yaxis_title="",
+    
+            yaxis=dict(
+                autorange="reversed"
+            ),
+    
+            height=500,
+    
+            margin=dict(
+                l=10,
+                r=10,
+                t=50,
+                b=20
+            )
+        )
+    
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+        
 # ====================================================
 # HIPERMAXI
 # ====================================================
