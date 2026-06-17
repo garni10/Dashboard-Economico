@@ -149,40 +149,103 @@ with tab1:
     st.markdown("---")
 
     # ======================================
-    # PRECIO PROMEDIO BUY VS SELL
+    # EVOLUCIÓN DEL MEJOR PRECIO BUY (BID)
+    # VS MEJOR PRECIO SELL (ASK)
     # ======================================
-
-    precio_diario = (
-        df_b
-        .groupby(
-            [
-                df_b["Timestamp"].dt.date,
-                "Tipo"
-            ]
-        )["Precio"]
-        .mean()
-        .reset_index()
+    
+    # Mejor precio BUY (máximo)
+    
+    precio_buy = (
+        df_b[df_b["Tipo"] == "BUY"]
+        .groupby(df_b[df_b["Tipo"] == "BUY"]["Timestamp"].dt.date)["Precio"]
+        .max()
+        .reset_index(name="Precio")
     )
-
-    precio_diario.rename(
+    
+    precio_buy.rename(
         columns={"Timestamp": "Fecha"},
         inplace=True
     )
-
+    
+    precio_buy["Tipo"] = "BUY"
+    
+    # Mejor precio SELL (mínimo)
+    
+    precio_sell = (
+        df_b[df_b["Tipo"] == "SELL"]
+        .groupby(df_b[df_b["Tipo"] == "SELL"]["Timestamp"].dt.date)["Precio"]
+        .min()
+        .reset_index(name="Precio")
+    )
+    
+    precio_sell.rename(
+        columns={"Timestamp": "Fecha"},
+        inplace=True
+    )
+    
+    precio_sell["Tipo"] = "SELL"
+    
+    # Unir ambas series
+    
+    precio_diario = pd.concat(
+        [precio_buy, precio_sell],
+        ignore_index=True
+    )
+    
+    # Gráfico
+    
     fig = px.line(
         precio_diario,
         x="Fecha",
         y="Precio",
         color="Tipo",
         markers=True,
-        title="Precio Promedio USDT/BOB"
+        title="Mejor Precio BUY (Bid) vs SELL (Ask)",
+        color_discrete_map={
+            "BUY": COLOR_BUY,
+            "SELL": COLOR_SELL
+        }
     )
-
+    
+    fig.update_traces(
+        line=dict(width=3),
+        marker=dict(size=6)
+    )
+    
+    fig.update_layout(
+    
+        title=dict(
+            font=dict(size=22)
+        ),
+    
+        xaxis_title="Fecha",
+        yaxis_title="Precio (BOB por USDT)",
+    
+        xaxis_title_font=dict(size=18),
+        yaxis_title_font=dict(size=18),
+    
+        xaxis=dict(
+            tickfont=dict(size=14)
+        ),
+    
+        yaxis=dict(
+            tickfont=dict(size=14)
+        ),
+    
+        legend=dict(
+            title="Tipo",
+            font=dict(size=16),
+            title_font=dict(size=17)
+        ),
+    
+        hovermode="x unified"
+    
+    )
+    
     st.plotly_chart(
         fig,
         use_container_width=True
     )
-
     # ======================================
     # DISPONIBILIDAD BUY VS SELL
     # ======================================
