@@ -153,12 +153,12 @@ with tab1:
     # VS MEJOR PRECIO SELL (ASK)
     # ======================================
     
-    # Mejor precio BUY (máximo)
+    # Mejor precio BUY (mínimo)
     
     precio_buy = (
         df_b[df_b["Tipo"] == "BUY"]
         .groupby(df_b[df_b["Tipo"] == "BUY"]["Timestamp"].dt.date)["Precio"]
-        .max()
+        .min()
         .reset_index(name="Precio")
     )
     
@@ -169,12 +169,12 @@ with tab1:
     
     precio_buy["Tipo"] = "BUY"
     
-    # Mejor precio SELL (mínimo)
+    # Mejor precio SELL (máximo)
     
     precio_sell = (
         df_b[df_b["Tipo"] == "SELL"]
         .groupby(df_b[df_b["Tipo"] == "SELL"]["Timestamp"].dt.date)["Precio"]
-        .min()
+        .max()
         .reset_index(name="Precio")
     )
     
