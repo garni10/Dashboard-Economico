@@ -404,6 +404,10 @@ with tab1:
     
     bin_size = 0.50
     
+    # ==========================
+    # SELL
+    # ==========================
+    
     with col_sell:
     
         fig = px.histogram(
@@ -421,32 +425,41 @@ with tab1:
             )
         )
     
-    fig.update_layout(
+        fig.update_layout(
     
-        title=dict(
-            font=dict(size=22)
-        ),
+            title=dict(
+                font=dict(size=22)
+            ),
     
-        xaxis_title="Precio (BOB)",
+            xaxis_title="Precio (BOB)",
     
-        yaxis_title="Cantidad de vendedores",
+            yaxis_title="Cantidad de vendedores",
     
-        xaxis_title_font=dict(size=18),
+            xaxis_title_font=dict(size=18),
     
-        yaxis_title_font=dict(size=18),
+            yaxis_title_font=dict(size=18),
     
-        xaxis=dict(
-            tickfont=dict(size=14)
-        ),
+            xaxis=dict(
+                tickfont=dict(size=14)
+            ),
     
-        yaxis=dict(
-            tickfont=dict(size=14)
-        ),
+            yaxis=dict(
+                tickfont=dict(size=14)
+            ),
     
-        bargap=0.03
+            bargap=0.03
     
-    )    
-
+        )
+    
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+    
+    # ==========================
+    # BUY
+    # ==========================
+    
     with col_buy:
     
         fig = px.histogram(
@@ -464,37 +477,37 @@ with tab1:
             )
         )
     
-    fig.update_layout(
+        fig.update_layout(
     
-        title=dict(
-            font=dict(size=22)
-        ),
+            title=dict(
+                font=dict(size=22)
+            ),
     
-        xaxis_title="Precio (BOB)",
+            xaxis_title="Precio (BOB)",
     
-        yaxis_title="Cantidad de vendedores",
+            yaxis_title="Cantidad de vendedores",
     
-        xaxis_title_font=dict(size=18),
+            xaxis_title_font=dict(size=18),
     
-        yaxis_title_font=dict(size=18),
+            yaxis_title_font=dict(size=18),
     
-        xaxis=dict(
-            tickfont=dict(size=14)
-        ),
+            xaxis=dict(
+                tickfont=dict(size=14)
+            ),
     
-        yaxis=dict(
-            tickfont=dict(size=14)
-        ),
+            yaxis=dict(
+                tickfont=dict(size=14)
+            ),
     
-        bargap=0.03
+            bargap=0.03
     
-    )    
+        )
     
         st.plotly_chart(
             fig,
             use_container_width=True
         )
-
+    
     # ======================================
     # TOP 10 VENDEDORES (ÚLTIMO SNAPSHOT)
     # ======================================
