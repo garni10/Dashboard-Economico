@@ -107,7 +107,7 @@ with tab1:
     # KPIS
     # ======================================
 
-    col1, col2, col3, col4 col5 = st.columns(5)
+    col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
         "Precio Máximo BUY",
@@ -129,12 +129,12 @@ with tab1:
         f"{buy['Disponible'].sum():,.0f}"
     )
 
+    col5, col6, col7, col8 = st.columns(4)
+    
     col5.metric(
         "Disponible SELL",
         f"{sell['Disponible'].sum():,.0f}"
     )
-
-    col6, col7, col8 = st.columns(3)
 
     col6.metric(
         "Vendedores BUY",
