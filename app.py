@@ -234,7 +234,7 @@ with tab1:
         sell["Precio"].max()
     )
     
-    bin_size = 0.10
+    bin_size = 0.50
     
     with col_sell:
     
