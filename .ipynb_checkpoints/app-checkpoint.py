@@ -446,6 +446,7 @@ with tab1:
         bargap=0.03
     
     )    
+
     with col_buy:
     
         fig = px.histogram(
@@ -463,11 +464,31 @@ with tab1:
             )
         )
     
-        fig.update_layout(
-            bargap=0.03,
-            xaxis_title="Precio",
-            yaxis_title="Cantidad de vendedores"
-        )
+    fig.update_layout(
+    
+        title=dict(
+            font=dict(size=22)
+        ),
+    
+        xaxis_title="Precio (BOB)",
+    
+        yaxis_title="Cantidad de vendedores",
+    
+        xaxis_title_font=dict(size=18),
+    
+        yaxis_title_font=dict(size=18),
+    
+        xaxis=dict(
+            tickfont=dict(size=14)
+        ),
+    
+        yaxis=dict(
+            tickfont=dict(size=14)
+        ),
+    
+        bargap=0.03
+    
+    )    
     
         st.plotly_chart(
             fig,
