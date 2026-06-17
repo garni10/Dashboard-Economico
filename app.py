@@ -11,16 +11,34 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-button[data-baseweb="tab"]{
-    font-size:24px;
-    font-weight:700;
-    padding-top:15px;
-    padding-bottom:15px;
-    justify-content:center;
+/* Contenedor de las pestañas */
+div[data-baseweb="tab-list"]{
+    gap: 20px;
 }
 
+/* Cada pestaña */
+button[data-baseweb="tab"]{
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    padding: 14px 28px !important;
+    height: 60px !important;
+    border-radius: 8px 8px 0px 0px;
+}
+
+/* Texto de la pestaña */
+button[data-baseweb="tab"] p{
+    font-size: 26px !important;
+    font-weight: 700 !important;
+}
+
+/* Pestaña activa */
 button[data-baseweb="tab"][aria-selected="true"]{
-    color:#00BFFF;
+    color: #4FC3F7 !important;
+}
+
+/* Línea inferior */
+div[data-baseweb="tab-highlight"]{
+    height:4px;
 }
 
 </style>
