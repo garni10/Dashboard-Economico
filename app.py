@@ -55,6 +55,25 @@ def cargar_binance():
         sep=";",
         encoding="utf-8"
     )
+
+    # Convertir Timestamp a fecha y hora
+    df["Timestamp"] = pd.to_datetime(
+        df["Timestamp"],
+        dayfirst=True,
+        errors="coerce"
+    )
+
+    # Convertir columnas numéricas
+    columnas_numericas = [
+        "Precio",
+        "Limite_min",
+        "Limite_max",
+        "Disponible"
+    ]
+
+    for col in columnas_numericas:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
     return df
 
 @st.cache_data(ttl=300)
