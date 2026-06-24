@@ -48,10 +48,13 @@ div[data-baseweb="tab-highlight"]{
 # CARGA DE DATOS
 # ==========================================
 
-@st.cache_data(ttl=300)
+@st.cache_data
 def cargar_binance():
-    df = pd.read_csv("data/detalle_binance3.csv")
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df = pd.read_csv(
+        "data/detalle_binance3.csv",
+        sep=";",
+        encoding="utf-8"
+    )
     return df
 
 @st.cache_data(ttl=300)
