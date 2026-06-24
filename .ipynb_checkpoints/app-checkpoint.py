@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 st.set_page_config(
-    page_title="Dashboard Económico",
+    page_title="Dashboard Dólar Digital - Precios Retail",
     page_icon="📊",
     layout="wide"
 )
@@ -71,7 +71,7 @@ df_hiper = cargar_hipermaxi()
 # TITULO
 # ==========================================
 
-st.title("📊 Dashboard Económico")
+st.title("📊 Dólar Digital - Precios Retail")
 st.markdown("---")
 
 tab1, tab2 = st.tabs([
@@ -1144,4 +1144,48 @@ with tab2:
     st.plotly_chart(
         fig,
         use_container_width=True
+    )
+
+# ====================================================
+# INDICADORES FINANCIEROS
+# ====================================================
+
+with tab3:
+
+    st.header("🏦 Indicadores Financieros")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            "Registros",
+            len(df_ind)
+        )
+
+    with col2:
+        st.metric(
+            "Entidades",
+            df_ind["Sigla"].nunique()
+        )
+
+    with col3:
+        st.metric(
+            "Tipos de entidad",
+            df_ind["TipoEntidad"].nunique()
+        )
+
+    with col4:
+        st.metric(
+            "Meses",
+            df_ind["Fecha"].dt.to_period("M").nunique()
+        )
+
+    st.markdown("---")
+
+    st.subheader("Vista previa de la base")
+
+    st.dataframe(
+        df_ind,
+        use_container_width=True,
+        hide_index=True
     )
