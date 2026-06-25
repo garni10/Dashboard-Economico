@@ -48,7 +48,7 @@ div[data-baseweb="tab-highlight"]{
 # CARGA DE DATOS
 # ==========================================
 
-#@st.cache_data
+@st.cache_data(ttl=600)
 def cargar_binance():
     df = pd.read_csv(
         "data/detalle_binance3.csv",
