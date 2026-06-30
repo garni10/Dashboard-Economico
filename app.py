@@ -131,6 +131,8 @@ with tab1:
         (df_binance["Timestamp"].dt.date <= fin)
     ]
 
+    df_b = df_b.sort_values("Timestamp").copy()
+    
     # ======================================
     # ÚLTIMA ACTUALIZACIÓN
     # ======================================
@@ -215,26 +217,18 @@ with tab1:
     # PRECIO PROMEDIO BUY VS SELL
     # ======================================
 
-    precio_diario = (
+    precio_snapshot = (
         df_b
         .groupby(
-            [
-                df_b["Timestamp"].dt.date,
-                "Tipo"
-            ]
+            ["Timestamp", "Tipo"],
+            as_index=False
         )["Precio"]
         .mean()
-        .reset_index()
     )
-
-    precio_diario.rename(
-        columns={"Timestamp": "Fecha"},
-        inplace=True
-    )
-
+    
     fig = px.line(
-        precio_diario,
-        x="Fecha",
+        precio_snapshot,
+        x="Timestamp",
         y="Precio",
         color="Tipo",
         markers=True,
@@ -252,7 +246,7 @@ with tab1:
             font=dict(size=22)
         ),
     
-        xaxis_title="Fecha",
+        xaxis_title="Fecha y Hora",
         yaxis_title="Precio (BOB por USDT)",
     
         xaxis_title_font=dict(size=18),
@@ -274,11 +268,10 @@ with tab1:
     
         hovermode="x unified"
     
-    )    
+    )
     
-    st.plotly_chart(
-        fig,
-        use_container_width=True
+    fig.update_xaxes(
+        tickformat="%d-%b\n%H:%M"
     )
     
     # ======================================
@@ -287,40 +280,27 @@ with tab1:
     # ======================================
     
     # Mejor precio BUY (mínimo)
-    
+        
     precio_buy = (
         df_b[df_b["Tipo"] == "BUY"]
-        .groupby(df_b[df_b["Tipo"] == "BUY"]["Timestamp"].dt.date)["Precio"]
+        .groupby("Timestamp", as_index=False)["Precio"]
         .min()
-        .reset_index(name="Precio")
-    )
-    
-    precio_buy.rename(
-        columns={"Timestamp": "Fecha"},
-        inplace=True
     )
     
     precio_buy["Tipo"] = "BUY"
     
     # Mejor precio SELL (máximo)
-    
+        
     precio_sell = (
         df_b[df_b["Tipo"] == "SELL"]
-        .groupby(df_b[df_b["Tipo"] == "SELL"]["Timestamp"].dt.date)["Precio"]
+        .groupby("Timestamp", as_index=False)["Precio"]
         .max()
-        .reset_index(name="Precio")
     )
     
-    precio_sell.rename(
-        columns={"Timestamp": "Fecha"},
-        inplace=True
-    )
-    
-    precio_sell["Tipo"] = "SELL"
-    
+    precio_sell["Tipo"] = "SELL"    
     # Unir ambas series
     
-    precio_diario = pd.concat(
+    precio_snapshot = pd.concat(
         [precio_buy, precio_sell],
         ignore_index=True
     )
@@ -328,8 +308,8 @@ with tab1:
     # Gráfico
     
     fig = px.line(
-        precio_diario,
-        x="Fecha",
+        precio_snapshot,
+        x="Timestamp",
         y="Precio",
         color="Tipo",
         markers=True,
@@ -346,7 +326,7 @@ with tab1:
             font=dict(size=22)
         ),
     
-        xaxis_title="Fecha",
+        xaxis_title="Fecha y Hora",
         yaxis_title="Precio (BOB por USDT)",
     
         xaxis_title_font=dict(size=18),
@@ -370,10 +350,10 @@ with tab1:
     
     )
     
-    st.plotly_chart(
-        fig,
-        use_container_width=True
+    fig.update_xaxes(
+        tickformat="%d-%b\n%H:%M"
     )
+    
     # ======================================
     # DISPONIBILIDAD BUY VS SELL
     # ======================================
@@ -381,23 +361,15 @@ with tab1:
     disponibilidad = (
         df_b
         .groupby(
-            [
-                df_b["Timestamp"].dt.date,
-                "Tipo"
-            ]
+            ["Timestamp", "Tipo"],
+            as_index=False
         )["Disponible"]
         .sum()
-        .reset_index()
-    )
-
-    disponibilidad.rename(
-        columns={"Timestamp": "Fecha"},
-        inplace=True
     )
 
     fig = px.line(
         disponibilidad,
-        x="Fecha",
+        x="Timestamp",
         y="Disponible",
         color="Tipo",
         markers=True,
@@ -415,8 +387,8 @@ with tab1:
             font=dict(size=22)
         ),
     
-        xaxis_title="Fecha",
-        yaxis_title="USDT Disponibles",
+        xaxis_title="Fecha y Hora",
+        yaxis_title="Precio (BOB por USDT)",
     
         xaxis_title_font=dict(size=18),
         yaxis_title_font=dict(size=18),
@@ -439,9 +411,8 @@ with tab1:
     
     )
     
-    st.plotly_chart(
-        fig,
-        use_container_width=True
+    fig.update_xaxes(
+        tickformat="%d-%b\n%H:%M"
     )
 
     # ======================================
