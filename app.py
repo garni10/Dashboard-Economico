@@ -273,6 +273,11 @@ with tab1:
     fig.update_xaxes(
         tickformat="%d-%b\n%H:%M"
     )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
     
     # ======================================
     # EVOLUCIÓN DEL MEJOR PRECIO BUY (BID)
@@ -353,6 +358,11 @@ with tab1:
     fig.update_xaxes(
         tickformat="%d-%b\n%H:%M"
     )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
     
     # ======================================
     # DISPONIBILIDAD BUY VS SELL
@@ -388,7 +398,7 @@ with tab1:
         ),
     
         xaxis_title="Fecha y Hora",
-        yaxis_title="Precio (BOB por USDT)",
+        yaxis_title="USDT Disponibles",
     
         xaxis_title_font=dict(size=18),
         yaxis_title_font=dict(size=18),
@@ -415,6 +425,11 @@ with tab1:
         tickformat="%d-%b\n%H:%M"
     )
 
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+    
     # ======================================
     # HISTOGRAMAS (ÚLTIMO SNAPSHOT)
     # ======================================
