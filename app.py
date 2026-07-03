@@ -174,7 +174,7 @@ with tab1:
     st.subheader("Componentes del Índice de Tensión")
     
     st.dataframe(
-        componentes_df.tail(20),
+        componentes_df.tail(),
         use_container_width=True
     )
 
