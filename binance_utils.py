@@ -534,29 +534,18 @@ def construir_componentes(df):
 # ======================================
 # NORMALIZACIÓN COMPONENTES
 # ======================================
-from scipy.stats import rankdata
+#from scipy.stats import rankdata
 
 def normalizar_percentil(serie):
     """
-    Convierte una serie en percentiles (0-100).
+    Convierte una serie en percentiles (0-100)
+    sin depender de SciPy.
     """
 
     serie = serie.copy()
 
-    mascara = serie.notna()
-
-    resultado = pd.Series(
-        np.nan,
-        index=serie.index
-    )
-
-    if mascara.sum() == 0:
-        return resultado
-
-    percentiles = (
-        rankdata(serie[mascara], method="average")
-        /
-        mascara.sum()
+    return (
+        serie.rank(method="average", pct=True)
         * 100
     )
 
