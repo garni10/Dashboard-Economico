@@ -1,6 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from binance_utils import serie_precio_promedio_robusto 
+from binance_utils import construir_indice_tension
+from binance_utils import construir_snapshot
+from binance_utils import calcular_spread
+from binance_utils import calcular_liquidez
+from binance_utils import construir_componentes
+from binance_utils import calcular_cv
+from binance_utils import normalizar_percentil
+from binance_utils import calcular_indice_tension
 
 st.set_page_config(
     page_title="Dashboard Económico",
@@ -62,7 +71,7 @@ def cargar_binance():
         dayfirst=True,
         errors="coerce"
     )
-
+    
     # Convertir columnas numéricas
     columnas_numericas = [
         "Precio",
@@ -132,7 +141,43 @@ with tab1:
     ]
 
     df_b = df_b.sort_values("Timestamp").copy()
+
+    # ======================================
+    # BASE ANALÍTICA (FASE 2)
+    # ======================================
+
+    snapshot_df = construir_snapshot(df_b)
+
+    componentes_df = construir_componentes(df_b)
+
+    #st.dataframe(componentes_df.tail())
+    componentes_df = calcular_indice_tension(
+        componentes_df
+    )
+
+    # ======================================
+    # ÚLTIMO SNAPSHOT
+    # ======================================
     
+    ultimo = componentes_df.iloc[-1]
+    anterior = componentes_df.iloc[-2]
+
+    variacion = (
+        ultimo["Indice_Tension"]
+        - anterior["Indice_Tension"]
+    )
+    estado = ultimo["Estado"]
+    #componentes_df["Spread_N"] = normalizar_percentil(
+        #componentes_df["Spread"]
+    #)
+
+    st.subheader("Componentes del Índice de Tensión")
+    
+    st.dataframe(
+        componentes_df.tail(20),
+        use_container_width=True
+    )
+
     # ======================================
     # ÚLTIMA ACTUALIZACIÓN
     # ======================================
@@ -163,6 +208,106 @@ with tab1:
     ultimo_buy_ts,
     ultimo_sell_ts
     )
+
+    # ======================================
+    # KPI ÍNDICE DE TENSIÓN 
+    # ======================================
+    st.markdown("## 📈 Índice de Tensión Cambiaria P2P")
+
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+    
+        st.metric(
+            label="Índice",
+            value=f"{ultimo['Indice_Tension']:.1f}",
+            delta=f"{variacion:+.1f}"
+        )
+    
+    with col2:
+    
+        st.info(
+            f"""
+    **Estado:** {estado}
+    
+    **Último Snapshot:** {ultimo['Snapshot']:%d/%m/%Y %H:%M}
+    """
+        )
+
+    # ======================================
+    # GRÁFICO KPI ÍNDICE DE TENSIÓN 
+    # ======================================
+    fig = px.line(
+        componentes_df,
+        x="Snapshot",
+        y="Indice_Tension",
+        title="Evolución del Índice de Tensión Cambiaria P2P",
+        markers=True
+    )
+    
+    fig.update_traces(
+        line=dict(width=4),
+        marker=dict(size=5)
+    )
+
+    fig.add_hrect(
+        y0=0,
+        y1=20,
+        fillcolor="green",
+        opacity=0.08,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=20,
+        y1=40,
+        fillcolor="limegreen",
+        opacity=0.08,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=40,
+        y1=60,
+        fillcolor="yellow",
+        opacity=0.10,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=60,
+        y1=80,
+        fillcolor="orange",
+        opacity=0.10,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=80,
+        y1=100,
+        fillcolor="red",
+        opacity=0.08,
+        line_width=0
+    )
+
+    fig.update_layout(
+    
+        yaxis=dict(
+            range=[0,100]
+        ),
+    
+        xaxis_title="Fecha",
+    
+        yaxis_title="Índice",
+    
+        hovermode="x unified"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
     # ======================================
     # KPIS
     # ======================================
@@ -214,9 +359,35 @@ with tab1:
     st.markdown("---")
 
     # ======================================
+    # BASE ANALÍTICA (Temporal)
+    # ======================================
+    
+    #st.subheader("Snapshot Analítico")
+    
+    #st.dataframe(snapshot_df.tail(15))
+
+    # ======================================
     # PRECIO PROMEDIO BUY VS SELL
     # ======================================
 
+    # ======================================
+    # SERIE ROBUSTA (IQR)
+    # ======================================
+    
+    precio_robusto = serie_precio_promedio_robusto(df_b)
+    
+    # Verificar que no existan snapshots vacíos
+    precio_robusto = precio_robusto.dropna(subset=["Precio"])
+
+    #indice_tension = construir_indice_tension(df_b)
+
+    #st.dataframe(indice_tension.tail(20))
+
+    #st.dataframe(precio_robusto.tail(10))
+
+    # ======================================
+    # SERIE ORIGINAL
+    # ======================================
     precio_snapshot = (
         df_b
         .groupby(
@@ -278,7 +449,65 @@ with tab1:
         fig,
         use_container_width=True
     )
+
+    # ======================================
+    # GRAFICO ROBUSTO
+    # ======================================
+
+    fig = px.line(
+        precio_robusto,
+        x="Timestamp",
+        y="Precio",
+        color="Tipo",
+        markers=True,
+        title="Precio Promedio Robusto (IQR)"
+    )
+
+    fig.update_traces(
+        line=dict(width=3),
+        marker=dict(size=6)
+    )
     
+    fig.update_layout(
+    
+        title=dict(
+            font=dict(size=22)
+        ),
+    
+        xaxis_title="Fecha y Hora",
+        yaxis_title="Precio (BOB por USDT)",
+    
+        xaxis_title_font=dict(size=18),
+        yaxis_title_font=dict(size=18),
+    
+        xaxis=dict(
+            tickfont=dict(size=14)
+        ),
+    
+        yaxis=dict(
+            tickfont=dict(size=14)
+        ),
+    
+        legend=dict(
+            title="Tipo",
+            font=dict(size=16),
+            title_font=dict(size=17)
+        ),
+    
+        hovermode="x unified"
+    
+    )
+    
+    fig.update_xaxes(
+        tickformat="%d-%b\n%H:%M"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+    
+
     # ======================================
     # EVOLUCIÓN DEL MEJOR PRECIO BUY (BID)
     # VS MEJOR PRECIO SELL (ASK)
