@@ -254,7 +254,7 @@ with tab1:
         y0=0,
         y1=20,
         fillcolor="#00C853",
-        opacity=0.28,
+        opacity=0.18,
         line_width=0
     )
     
@@ -262,7 +262,7 @@ with tab1:
         y0=20,
         y1=40,
         fillcolor="limegreen",
-        opacity=0.28,
+        opacity=0.18,
         line_width=0
     )
     
@@ -270,7 +270,7 @@ with tab1:
         y0=40,
         y1=60,
         fillcolor="yellow",
-        opacity=0.30,
+        opacity=0.20,
         line_width=0
     )
     
@@ -278,7 +278,7 @@ with tab1:
         y0=60,
         y1=80,
         fillcolor="orange",
-        opacity=0.28,
+        opacity=0.18,
         line_width=0
     )
     
@@ -286,7 +286,7 @@ with tab1:
         y0=80,
         y1=100,
         fillcolor="#FF5252",
-        opacity=0.28,
+        opacity=0.18,
         line_width=0
     )
 
