@@ -3,4 +3,3 @@ pandas
 numpy
 plotly
 openpyxl
-scipy==1.13.1
