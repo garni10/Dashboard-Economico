@@ -253,8 +253,8 @@ with tab1:
     fig.add_hrect(
         y0=0,
         y1=20,
-        fillcolor="green",
-        opacity=0.08,
+        fillcolor="#00C853",
+        opacity=0.28,
         line_width=0
     )
     
@@ -262,7 +262,7 @@ with tab1:
         y0=20,
         y1=40,
         fillcolor="limegreen",
-        opacity=0.08,
+        opacity=0.28,
         line_width=0
     )
     
@@ -270,7 +270,7 @@ with tab1:
         y0=40,
         y1=60,
         fillcolor="yellow",
-        opacity=0.10,
+        opacity=0.30,
         line_width=0
     )
     
@@ -278,15 +278,15 @@ with tab1:
         y0=60,
         y1=80,
         fillcolor="orange",
-        opacity=0.10,
+        opacity=0.28,
         line_width=0
     )
     
     fig.add_hrect(
         y0=80,
         y1=100,
-        fillcolor="red",
-        opacity=0.08,
+        fillcolor="#FF5252",
+        opacity=0.28,
         line_width=0
     )
 
