@@ -10,7 +10,7 @@ from binance_utils import construir_componentes
 from binance_utils import calcular_cv
 from binance_utils import normalizar_percentil
 from binance_utils import calcular_indice_tension
-from binance_utils import calcular_contribuciones
+#from binance_utils import calcular_contribuciones
 from binance_utils import generar_diagnostico
 from binance_utils import calcular_hhi
 from binance_utils import interpretar_hhi
@@ -160,7 +160,7 @@ with tab1:
         componentes_df
     )
 
-    componentes_df = calcular_contribuciones(componentes_df)
+    #componentes_df = calcular_contribuciones(componentes_df)
 
     hhi_df = calcular_hhi(df_b)
     #st.subheader("🏛 Validación HHI")
