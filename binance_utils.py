@@ -600,6 +600,178 @@ def calcular_indice_tension(componentes):
     
     return componentes
 
+# ======================================
+# CONTRIBUCIÓN AL ÍNDICE DE TENSIÓN
+# ======================================
+def calcular_contribuciones(componentes):
+    """
+    Calcula la contribución de cada componente
+    al Índice de Tensión Cambiaria.
+    """
+
+    componentes = componentes.copy()
+
+    componentes["Contrib_Spread"] = (
+        componentes["Score_Spread"] * 0.40
+    )
+
+    componentes["Contrib_Liquidez"] = (
+        componentes["Score_Liquidez"] * 0.25
+    )
+
+    componentes["Contrib_CV"] = (
+        componentes["Score_CV"] * 0.20
+    )
+
+    componentes["Contrib_Outliers"] = (
+        componentes["Score_Outliers"] * 0.15
+    )
+
+    return componentes
+
+# ======================================
+# INTERPRETACIÓN CONTRIBUCIÓN AL ÍNDICE DE TENSIÓN
+# ======================================
+def generar_diagnostico(componentes):
+    """
+    Genera el diagnóstico automático del
+    Índice de Tensión Cambiaria.
+    """
+    ultimo = componentes.iloc[-1]
+    contribuciones = {
+        "Spread": ultimo["Contrib_Spread"],
+        "Liquidez": ultimo["Contrib_Liquidez"],
+        "Volatilidad": ultimo["Contrib_CV"],
+        "Outliers": ultimo["Contrib_Outliers"]
+    }
+
+    componente = max(
+        contribuciones,
+        key=contribuciones.get
+    )
+
+    valor = contribuciones[componente]
+
+    participacion = (
+        valor /
+        ultimo["Indice_Tension"]
+    ) * 100
+
+    return componente, valor, participacion
+
+# ======================================
+# HHI
+# ======================================
+def calcular_hhi(df):
+    """
+    Calcula el Índice Herfindahl-Hirschman (HHI)
+    para cada Snapshot y Tipo.
+    """
+    df = df.copy()
+    df["Snapshot"] = df["Timestamp"].apply(crear_snapshot)
+    resultados = []
+    for (snapshot, tipo), grupo in df.groupby(["Snapshot", "Tipo"]):
+
+        # Disponibilidad por vendedor
+        vendedores = (
+            grupo.groupby("Vendedor")["Disponible"]
+            .sum()
+            .reset_index()
+        )
+
+        # Número de vendedores
+        n_vendedores = len(vendedores)
+
+        # Disponibilidad total
+        total = vendedores["Disponible"].sum()
+        if total == 0:
+            hhi = np.nan
+        else:
+            vendedores["Participacion"] = (
+                vendedores["Disponible"] / total
+            ) * 100
+
+            hhi = (
+                vendedores["Participacion"] ** 2
+            ).sum()
+        resultados.append({
+            "Snapshot": snapshot,
+            "Tipo": tipo,
+            "HHI": hhi,
+            "N_Vendedores": n_vendedores
+        })
+
+    return pd.DataFrame(resultados)
+
+def interpretar_hhi(hhi):
+
+    if hhi < 1500:
+        return "🟢 Mercado competitivo"
+
+    elif hhi < 2500:
+        return "🟡 Concentración moderada"
+
+    else:
+        return "🔴 Alta concentración"
+
+# ======================================
+# RESUMEN EJECUTIVO
+# ======================================
+def generar_resumen_ejecutivo(componentes, hhi_df):
+    """
+    Genera el resumen ejecutivo del Observatorio.
+    """
+    ultimo = componentes.iloc[-1]
+    hhi_buy = (
+        hhi_df[hhi_df["Tipo"] == "BUY"]
+        .sort_values("Snapshot")
+        .iloc[-1]
+    )
+
+    hhi_sell = (
+        hhi_df[hhi_df["Tipo"] == "SELL"]
+        .sort_values("Snapshot")
+        .iloc[-1]
+    )
+
+    contribuciones = {
+        "Spread": ultimo["Contrib_Spread"],
+        "Liquidez": ultimo["Contrib_Liquidez"],
+        "Volatilidad": ultimo["Contrib_CV"],
+        "Outliers": ultimo["Contrib_Outliers"]
+    }
+
+    principal = max(
+        contribuciones,
+        key=contribuciones.get
+    )
+
+    participacion = (
+        contribuciones[principal] /
+        ultimo["Indice_Tension"]
+    ) * 100
+
+    resumen = f"""
+**Índice de Tensión:** {ultimo['Indice_Tension']:.1f}
+
+El principal impulsor de la tensión es **{principal}**, con una
+contribución de **{participacion:.1f}%**.
+
+• HHI BUY: {hhi_buy['HHI']:.0f}
+  ({interpretar_hhi(hhi_buy['HHI'])})
+
+• HHI SELL: {hhi_sell['HHI']:.0f}
+  ({interpretar_hhi(hhi_sell['HHI'])})
+"""
+
+    return resumen
+
+
+
+
+
+
+
 
 
 
