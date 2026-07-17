@@ -123,6 +123,120 @@ tab1, tab2 = st.tabs([
 with tab1:
 
     # ======================================
+    # FILTRO DE FECHAS
+    # ======================================
+
+    fecha_min = df_binance["Timestamp"].min().date()
+    fecha_max = df_binance["Timestamp"].max().date()
+
+    rango = st.slider(
+        "Periodo",
+        min_value=fecha_min,
+        max_value=fecha_max,
+        value=(fecha_min, fecha_max)
+    )
+
+    inicio, fin = rango
+
+    df_b = df_binance[
+        (df_binance["Timestamp"].dt.date >= inicio)
+        &
+        (df_binance["Timestamp"].dt.date <= fin)
+    ]
+
+    df_b = df_b.sort_values("Timestamp").copy()
+
+    # ======================================
+    # BASE ANALÍTICA (FASE 2)
+    # ======================================
+
+    snapshot_df = construir_snapshot(df_b)
+
+    componentes_df = construir_componentes(df_b)
+
+    #st.dataframe(componentes_df.tail())
+    componentes_df = calcular_indice_tension(
+        componentes_df
+    )
+
+    #componentes_df = calcular_contribuciones(componentes_df)
+    componentes_df = bu.calcular_contribuciones(componentes_df)
+    
+    hhi_df = calcular_hhi(df_b)
+    #st.subheader("🏛 Validación HHI")
+    #st.dataframe(
+        #hhi_df.tail(20),
+        #width="stretch"
+    #)
+    hhi_buy = (
+        hhi_df[hhi_df["Tipo"] == "BUY"]
+        .sort_values("Snapshot")
+        .iloc[-1]
+    )
+    
+    hhi_sell = (
+        hhi_df[hhi_df["Tipo"] == "SELL"]
+        .sort_values("Snapshot")
+        .iloc[-1]
+    )
+
+    estado_buy = interpretar_hhi(
+        hhi_buy["HHI"]
+    )
+    
+    estado_sell = interpretar_hhi(
+        hhi_sell["HHI"]
+    )
+    
+    # ======================================
+    # ÚLTIMO SNAPSHOT
+    # ======================================
+    
+    ultimo = componentes_df.iloc[-1]
+    anterior = componentes_df.iloc[-2]
+
+    variacion = (
+        ultimo["Indice_Tension"]
+        - anterior["Indice_Tension"]
+    )
+    estado = ultimo["Estado"]
+    #componentes_df["Spread_N"] = normalizar_percentil(
+        #componentes_df["Spread"]
+    #)
+
+    
+    # ======================================
+    # ÚLTIMA ACTUALIZACIÓN
+    # ======================================
+
+    ultimo_buy_ts = (
+    df_b[df_b["Tipo"] == "BUY"]["Timestamp"]
+    .max()
+    )
+
+    ultimo_sell_ts = (
+    df_b[df_b["Tipo"] == "SELL"]["Timestamp"]
+    .max()
+    )
+
+    buy = df_b[
+    (df_b["Tipo"] == "BUY")
+    &
+    (df_b["Timestamp"] == ultimo_buy_ts)
+    ]
+
+    sell = df_b[
+    (df_b["Tipo"] == "SELL")
+    &
+    (df_b["Timestamp"] == ultimo_sell_ts)
+    ]
+
+    ultimo_ts = max(
+    ultimo_buy_ts,
+    ultimo_sell_ts
+    )
+
+    # ======================================
     # KPI ÍNDICE DE TENSIÓN 
     # ======================================
     st.markdown("## 📈 Índice de Tensión Cambiaria P2P")
@@ -332,120 +446,6 @@ with tab1:
 
     
     st.header("💵 Mercado Binance P2P USDT/BOB")
-
-    # ======================================
-    # FILTRO DE FECHAS
-    # ======================================
-
-    fecha_min = df_binance["Timestamp"].min().date()
-    fecha_max = df_binance["Timestamp"].max().date()
-
-    rango = st.slider(
-        "Periodo",
-        min_value=fecha_min,
-        max_value=fecha_max,
-        value=(fecha_min, fecha_max)
-    )
-
-    inicio, fin = rango
-
-    df_b = df_binance[
-        (df_binance["Timestamp"].dt.date >= inicio)
-        &
-        (df_binance["Timestamp"].dt.date <= fin)
-    ]
-
-    df_b = df_b.sort_values("Timestamp").copy()
-
-    # ======================================
-    # BASE ANALÍTICA (FASE 2)
-    # ======================================
-
-    snapshot_df = construir_snapshot(df_b)
-
-    componentes_df = construir_componentes(df_b)
-
-    #st.dataframe(componentes_df.tail())
-    componentes_df = calcular_indice_tension(
-        componentes_df
-    )
-
-    #componentes_df = calcular_contribuciones(componentes_df)
-    componentes_df = bu.calcular_contribuciones(componentes_df)
-    
-    hhi_df = calcular_hhi(df_b)
-    #st.subheader("🏛 Validación HHI")
-    #st.dataframe(
-        #hhi_df.tail(20),
-        #width="stretch"
-    #)
-    hhi_buy = (
-        hhi_df[hhi_df["Tipo"] == "BUY"]
-        .sort_values("Snapshot")
-        .iloc[-1]
-    )
-    
-    hhi_sell = (
-        hhi_df[hhi_df["Tipo"] == "SELL"]
-        .sort_values("Snapshot")
-        .iloc[-1]
-    )
-
-    estado_buy = interpretar_hhi(
-        hhi_buy["HHI"]
-    )
-    
-    estado_sell = interpretar_hhi(
-        hhi_sell["HHI"]
-    )
-    
-    # ======================================
-    # ÚLTIMO SNAPSHOT
-    # ======================================
-    
-    ultimo = componentes_df.iloc[-1]
-    anterior = componentes_df.iloc[-2]
-
-    variacion = (
-        ultimo["Indice_Tension"]
-        - anterior["Indice_Tension"]
-    )
-    estado = ultimo["Estado"]
-    #componentes_df["Spread_N"] = normalizar_percentil(
-        #componentes_df["Spread"]
-    #)
-
-    
-    # ======================================
-    # ÚLTIMA ACTUALIZACIÓN
-    # ======================================
-
-    ultimo_buy_ts = (
-    df_b[df_b["Tipo"] == "BUY"]["Timestamp"]
-    .max()
-    )
-
-    ultimo_sell_ts = (
-    df_b[df_b["Tipo"] == "SELL"]["Timestamp"]
-    .max()
-    )
-
-    buy = df_b[
-    (df_b["Tipo"] == "BUY")
-    &
-    (df_b["Timestamp"] == ultimo_buy_ts)
-    ]
-
-    sell = df_b[
-    (df_b["Tipo"] == "SELL")
-    &
-    (df_b["Timestamp"] == ultimo_sell_ts)
-    ]
-
-    ultimo_ts = max(
-    ultimo_buy_ts,
-    ultimo_sell_ts
-    )
     
     # ======================================
     # KPIS
