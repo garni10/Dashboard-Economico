@@ -122,6 +122,215 @@ tab1, tab2 = st.tabs([
 
 with tab1:
 
+    # ======================================
+    # KPI ÍNDICE DE TENSIÓN 
+    # ======================================
+    st.markdown("## 📈 Índice de Tensión Cambiaria P2P")
+    col1, col2 = st.columns([1, 2])    
+    with col1:
+        st.metric(
+            label="Índice",
+            value=f"{ultimo['Indice_Tension']:.1f}",
+            delta=f"{variacion:+.1f}"
+        )
+    with col2:    
+        st.info(
+            f"""
+    **Estado:** {estado}
+    
+    **Último Snapshot:** {ultimo['Snapshot']:%d/%m/%Y %H:%M}
+    """
+        )
+
+    # ======================================
+    # LISTA DE EVENTOS 
+    # ======================================
+    eventos = [
+        {
+            "fecha": "2026-06-29",
+            "texto": "🏛 Flexibilización TC"
+        }
+    ]
+    
+    # ======================================
+    # GRÁFICO KPI ÍNDICE DE TENSIÓN 
+    # ======================================
+    fig = px.line(
+        componentes_df,
+        x="Snapshot",
+        y="Indice_Tension",
+        title="Evolución del Índice de Tensión Cambiaria P2P",
+        markers=True
+    )
+    
+    fig.update_traces(
+        line=dict(width=4),
+        marker=dict(size=5)
+    )
+
+    fig.add_hrect(
+        y0=0,
+        y1=20,
+        fillcolor="#00C853",
+        opacity=0.18,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=20,
+        y1=40,
+        fillcolor="limegreen",
+        opacity=0.18,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=40,
+        y1=60,
+        fillcolor="yellow",
+        opacity=0.20,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=60,
+        y1=80,
+        fillcolor="orange",
+        opacity=0.18,
+        line_width=0
+    )
+    
+    fig.add_hrect(
+        y0=80,
+        y1=100,
+        fillcolor="#FF5252",
+        opacity=0.18,
+        line_width=0
+    )
+
+    fig.update_layout(
+    
+        yaxis=dict(
+            range=[0,100]
+        ),
+    
+        xaxis_title="Fecha",
+    
+        yaxis_title="Índice",
+    
+        hovermode="x unified"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # ======================================
+    # EVENTOS EN EL GRÁFICO
+    # ======================================
+    for evento in eventos:
+        fig.add_vline(
+            x=pd.to_datetime(evento["fecha"]),
+            line_dash="dash",
+            line_color="gray",
+            line_width=2,
+        )
+        
+        fig.add_annotation(
+            x=pd.to_datetime(evento["fecha"]),
+            y=componentes_df["Indice_Tension"].max(),
+            text=evento["texto"],
+            showarrow=False,
+            yshift=15
+        )
+        
+    # ======================================
+    # DESCOMPOSICIÓN íNDICE
+    # ======================================
+    st.subheader("🔎 Descomposición del Índice de Tensión")
+    ultimo = componentes_df.iloc[-1]
+    df_contrib = pd.DataFrame({
+        "Componente": [
+            "Spread",
+            "Liquidez",
+            "Volatilidad",
+            "Outliers"
+        ],
+        "Contribución": [
+            ultimo["Contrib_Spread"],
+            ultimo["Contrib_Liquidez"],
+            ultimo["Contrib_CV"],
+            ultimo["Contrib_Outliers"]
+        ]
+    })
+
+    fig = px.bar(
+        df_contrib,
+        x="Contribución",
+        y="Componente",
+        orientation="h",
+        text="Contribución",
+        title="Descomposición del Índice"
+    )
+
+    fig.update_traces(
+        texttemplate="%{text:.1f}",
+        textposition="outside"
+    )
+
+    st.plotly_chart(
+        fig,
+        width="stretch"
+    )
+
+    # ======================================
+    # INTERPRETACIÓN DESCOMPOSICIÓN ÍNDICE
+    # ======================================
+    componente, valor, participacion = generar_diagnostico(
+    componentes_df
+    )
+    
+    st.info(
+        f"""
+    🧠 Diagnóstico
+    
+    El principal factor que explica la tensión actual es
+    **{componente}**.
+    
+    Su contribución asciende a
+    **{valor:.1f} puntos**,
+    equivalente al
+    **{participacion:.1f}%**
+    del Índice de Tensión Cambiaria.
+    """
+    )
+
+    # ======================================
+    # KPI HHI
+    # ======================================
+    st.subheader("🏛 Concentración del Mercado Índice Herfindahl-Hirschman")
+    col1, col2 = st.columns(2)
+    with col1:    
+        st.metric(
+            "🏛 HHI BUY",
+            f"{hhi_buy['HHI']:.0f}"
+        )
+        st.caption(estado_buy)
+        st.caption(
+            f"👥 {int(hhi_buy['N_Vendedores'])} vendedores"
+        )
+    with col2:
+        st.metric(
+            "🏛 HHI SELL",
+            f"{hhi_sell['HHI']:.0f}"
+        )
+        st.caption(estado_sell)
+        st.caption(
+            f"👥 {int(hhi_sell['N_Vendedores'])} vendedores"
+        )
+
+    
     st.header("💵 Mercado Binance P2P USDT/BOB")
 
     # ======================================
@@ -911,213 +1120,6 @@ with tab1:
         use_container_width=True
     )
 
-    # ======================================
-    # KPI ÍNDICE DE TENSIÓN 
-    # ======================================
-    st.markdown("## 📈 Índice de Tensión Cambiaria P2P")
-    col1, col2 = st.columns([1, 2])    
-    with col1:
-        st.metric(
-            label="Índice",
-            value=f"{ultimo['Indice_Tension']:.1f}",
-            delta=f"{variacion:+.1f}"
-        )
-    with col2:    
-        st.info(
-            f"""
-    **Estado:** {estado}
-    
-    **Último Snapshot:** {ultimo['Snapshot']:%d/%m/%Y %H:%M}
-    """
-        )
-
-    # ======================================
-    # LISTA DE EVENTOS 
-    # ======================================
-    eventos = [
-        {
-            "fecha": "2026-06-29",
-            "texto": "🏛 Flexibilización TC"
-        }
-    ]
-    
-    # ======================================
-    # GRÁFICO KPI ÍNDICE DE TENSIÓN 
-    # ======================================
-    fig = px.line(
-        componentes_df,
-        x="Snapshot",
-        y="Indice_Tension",
-        title="Evolución del Índice de Tensión Cambiaria P2P",
-        markers=True
-    )
-    
-    fig.update_traces(
-        line=dict(width=4),
-        marker=dict(size=5)
-    )
-
-    fig.add_hrect(
-        y0=0,
-        y1=20,
-        fillcolor="#00C853",
-        opacity=0.18,
-        line_width=0
-    )
-    
-    fig.add_hrect(
-        y0=20,
-        y1=40,
-        fillcolor="limegreen",
-        opacity=0.18,
-        line_width=0
-    )
-    
-    fig.add_hrect(
-        y0=40,
-        y1=60,
-        fillcolor="yellow",
-        opacity=0.20,
-        line_width=0
-    )
-    
-    fig.add_hrect(
-        y0=60,
-        y1=80,
-        fillcolor="orange",
-        opacity=0.18,
-        line_width=0
-    )
-    
-    fig.add_hrect(
-        y0=80,
-        y1=100,
-        fillcolor="#FF5252",
-        opacity=0.18,
-        line_width=0
-    )
-
-    fig.update_layout(
-    
-        yaxis=dict(
-            range=[0,100]
-        ),
-    
-        xaxis_title="Fecha",
-    
-        yaxis_title="Índice",
-    
-        hovermode="x unified"
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-    # ======================================
-    # EVENTOS EN EL GRÁFICO
-    # ======================================
-    for evento in eventos:
-        fig.add_vline(
-            x=pd.to_datetime(evento["fecha"]),
-            line_dash="dash",
-            line_color="gray",
-            line_width=2,
-        )
-        
-        fig.add_annotation(
-            x=pd.to_datetime(evento["fecha"]),
-            y=componentes_df["Indice_Tension"].max(),
-            text=evento["texto"],
-            showarrow=False,
-            yshift=15
-        )
-        
-    # ======================================
-    # DESCOMPOSICIÓN íNDICE
-    # ======================================
-    st.subheader("🔎 Descomposición del Índice de Tensión")
-    ultimo = componentes_df.iloc[-1]
-    df_contrib = pd.DataFrame({
-        "Componente": [
-            "Spread",
-            "Liquidez",
-            "Volatilidad",
-            "Outliers"
-        ],
-        "Contribución": [
-            ultimo["Contrib_Spread"],
-            ultimo["Contrib_Liquidez"],
-            ultimo["Contrib_CV"],
-            ultimo["Contrib_Outliers"]
-        ]
-    })
-
-    fig = px.bar(
-        df_contrib,
-        x="Contribución",
-        y="Componente",
-        orientation="h",
-        text="Contribución",
-        title="Descomposición del Índice"
-    )
-
-    fig.update_traces(
-        texttemplate="%{text:.1f}",
-        textposition="outside"
-    )
-
-    st.plotly_chart(
-        fig,
-        width="stretch"
-    )
-
-    # ======================================
-    # INTERPRETACIÓN DESCOMPOSICIÓN ÍNDICE
-    # ======================================
-    componente, valor, participacion = generar_diagnostico(
-    componentes_df
-    )
-    
-    st.info(
-        f"""
-    🧠 Diagnóstico
-    
-    El principal factor que explica la tensión actual es
-    **{componente}**.
-    
-    Su contribución asciende a
-    **{valor:.1f} puntos**,
-    equivalente al
-    **{participacion:.1f}%**
-    del Índice de Tensión Cambiaria.
-    """
-    )
-
-    # ======================================
-    # KPI HHI
-    # ======================================
-    st.subheader("🏛 Concentración del Mercado Índice Herfindahl-Hirschman")
-    col1, col2 = st.columns(2)
-    with col1:    
-        st.metric(
-            "🏛 HHI BUY",
-            f"{hhi_buy['HHI']:.0f}"
-        )
-        st.caption(estado_buy)
-        st.caption(
-            f"👥 {int(hhi_buy['N_Vendedores'])} vendedores"
-        )
-    with col2:
-        st.metric(
-            "🏛 HHI SELL",
-            f"{hhi_sell['HHI']:.0f}"
-        )
-        st.caption(estado_sell)
-        st.caption(
-            f"👥 {int(hhi_sell['N_Vendedores'])} vendedores"
-        )
 
     # ======================================
     # RESUMEN EJECUTIVO
