@@ -236,6 +236,58 @@ with tab1:
     ultimo_sell_ts
     )
 
+    st.header("💵 Mercado Binance P2P USDT/BOB")
+    
+    # ======================================
+    # KPIS
+    # ======================================
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric(
+        "Precio Máximo BUY",
+        f"{buy['Precio'].max():.2f}"
+    )
+
+    col2.metric(
+        "Precio Mínimo BUY",
+        f"{buy['Precio'].min():.2f}"
+    )
+    
+    col3.metric(
+        "Precio Promedio BUY",
+        f"{buy['Precio'].mean():.2f}"
+    )
+
+    col4.metric(
+        "Disponible BUY",
+        f"{buy['Disponible'].sum():,.0f}"
+    )
+
+    col5, col6, col7, col8 = st.columns(4)
+    
+    col5.metric(
+        "Disponible SELL",
+        f"{sell['Disponible'].sum():,.0f}"
+    )
+
+    col6.metric(
+        "Vendedores BUY",
+        buy["Vendedor"].nunique()
+    )
+
+    col7.metric(
+        "Vendedores SELL",
+        sell["Vendedor"].nunique()
+    )
+
+    col8.metric(
+        "Actualizado",
+        ultimo_ts.strftime("%d/%m %H:%M")
+    )
+
+    st.markdown("---")
+    
     # ======================================
     # KPI ÍNDICE DE TENSIÓN 
     # ======================================
@@ -445,58 +497,6 @@ with tab1:
         )
 
     
-    st.header("💵 Mercado Binance P2P USDT/BOB")
-    
-    # ======================================
-    # KPIS
-    # ======================================
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric(
-        "Precio Máximo BUY",
-        f"{buy['Precio'].max():.2f}"
-    )
-
-    col2.metric(
-        "Precio Mínimo BUY",
-        f"{buy['Precio'].min():.2f}"
-    )
-    
-    col3.metric(
-        "Precio Promedio BUY",
-        f"{buy['Precio'].mean():.2f}"
-    )
-
-    col4.metric(
-        "Disponible BUY",
-        f"{buy['Disponible'].sum():,.0f}"
-    )
-
-    col5, col6, col7, col8 = st.columns(4)
-    
-    col5.metric(
-        "Disponible SELL",
-        f"{sell['Disponible'].sum():,.0f}"
-    )
-
-    col6.metric(
-        "Vendedores BUY",
-        buy["Vendedor"].nunique()
-    )
-
-    col7.metric(
-        "Vendedores SELL",
-        sell["Vendedor"].nunique()
-    )
-
-    col8.metric(
-        "Actualizado",
-        ultimo_ts.strftime("%d/%m %H:%M")
-    )
-
-    st.markdown("---")
-
     # ======================================
     # BASE ANALÍTICA (Temporal)
     # ======================================
