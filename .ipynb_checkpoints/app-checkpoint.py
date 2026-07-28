@@ -1113,12 +1113,12 @@ with tab1:
     # ====================================================
     # CUADRO COMPONENTES
     # ====================================================    
-    st.subheader("Componentes del Índice de Tensión")
+    #st.subheader("Componentes del Índice de Tensión")
     
-    st.dataframe(
-        componentes_df.tail(),
-        use_container_width=True
-    )
+    #st.dataframe(
+        #componentes_df.tail(),
+        #use_container_width=True
+    #)
 
 
     # ======================================
